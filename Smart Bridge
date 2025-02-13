@@ -1,0 +1,110 @@
+#include <Servo.h>
+
+// Define pins
+const int waterSensorPin = A0; 
+const int buzzerPin = 2;       
+const int servoPin1 = 3;       
+const int servoPin2 = 5;      
+const int servoPin3 = 6;       
+const int servoPin4 = 9;      
+
+Servo servo1;
+Servo servo2;
+Servo servo3;
+Servo servo4;
+
+bool state = false; 
+const int waterLevelThreshold = 250;
+const int delayTime = 20; 
+
+void setup() {
+  pinMode(buzzerPin, OUTPUT);
+  digitalWrite(buzzerPin, LOW); 
+  
+  servo1.attach(servoPin1);
+  servo2.attach(servoPin2);
+  servo3.attach(servoPin3);
+  servo4.attach(servoPin4);
+
+ 
+  servo1.write(0);
+  servo2.write(0);
+  servo3.write(0);
+  servo4.write(0);
+
+  Serial.begin(9600);
+
+  servo1.write(90);
+  servo2.write(90);
+}
+
+void gradualMove(Servo &servo, int startPos, int endPos, int delayTime) {
+  if (startPos < endPos) {
+    for (int pos = startPos; pos <= endPos; pos++) {
+      servo.write(pos);
+      delay(delayTime);
+    }
+  } else {
+    for (int pos = startPos; pos >= endPos; pos--) {
+      servo.write(pos);
+      delay(delayTime);
+    }
+  }
+}
+
+void loop() {
+  int waterSensorValue = analogRead(waterSensorPin);
+  Serial.print("Water level: ");
+  Serial.println(waterSensorValue);
+  delay(1000);
+
+  if (waterSensorValue > waterLevelThreshold && state==false ) {
+   
+    digitalWrite(buzzerPin, HIGH);
+
+    
+    gradualMove(servo1, 90, 0, delayTime);
+    gradualMove(servo2, 90, 0, delayTime);
+    delay(1000); 
+    
+    gradualMove(servo3, 0, 90, delayTime);
+    gradualMove(servo4, 0, 90, delayTime);
+    delay(1000); 
+
+   
+    gradualMove(servo1, 0, 90, delayTime);
+    gradualMove(servo2, 0, 90, delayTime);
+    delay(1000);
+
+   
+    digitalWrite(buzzerPin, LOW);
+
+   
+    state = true;
+  } else if (waterSensorValue <= waterLevelThreshold && state==true ) {
+    digitalWrite(buzzerPin, HIGH);
+
+   
+    gradualMove(servo1, 90, 0, delayTime);
+    gradualMove(servo2, 90, 0, delayTime);
+    delay(1000); 
+
+    
+    gradualMove(servo3, 90, 0, delayTime);
+    gradualMove(servo4, 90, 0, delayTime);
+    delay(1000); 
+
+   
+    gradualMove(servo1, 0, 90, delayTime);
+    gradualMove(servo2, 0, 90, delayTime);
+    delay(1000);
+
+   
+    digitalWrite(buzzerPin, LOW);
+    state=false;
+
+  }
+  
+ 
+  delay(500);
+}
